@@ -18,3 +18,71 @@ CREATE TABLE usuario(
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_usuario_rol FOREIGN KEY (rol_id) REFERENCES rol(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+CREATE TABLE cliente(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    nif_cif VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    telefono VARCHAR(20),
+    linea_direccion VARCHAR(255),
+    ciudad VARCHAR(100),
+    provincia VARCHAR(100),
+    codigo_postal VARCHAR(10),
+    activo BOOLEAN DEFAULT TRUE,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE mascota(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo VARCHAR(100) NOT NULL,
+    raza VARCHAR(100),
+    sexo VARCHAR(10),
+    fecha_nacimiento DATE,
+    peso DECIMAL(5,2),
+    microchip VARCHAR(20) UNIQUE,
+    descripcion TEXT,
+    foto VARCHAR(255),
+    cliente_id INT NOT NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_mascota_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE historial_medico(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha_registro DATE,
+    mascota_id INT NOT NULL,
+    diagnostico TEXT,
+    usuario_id INT NOT NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_historial_medico_mascota FOREIGN KEY (mascota_id) REFERENCES mascota(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_historial_medico_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE cita(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha_cita DATETIME NOT NULL,
+    mascota_id INT NOT NULL,
+    estado_cita VARCHAR(50) NOT NULL DEFAULT 'Programada',
+    usuario_id INT NOT NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cita_mascota FOREIGN KEY (mascota_id) REFERENCES mascota(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_cita_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE producto(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    referencia VARCHAR(20) NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    porcentaje_iva DECIMAL(5,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
