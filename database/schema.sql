@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS db_erpet;
+CREATE DATABASE IF NOT EXISTS db_erpet CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;
 USE db_erpet;
 
 CREATE TABLE rol(
@@ -14,8 +14,9 @@ CREATE TABLE usuario(
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
-    rol_id INT NOT NULL REFERENCES rol(id),
+    rol_id INT NOT NULL,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_usuario_rol FOREIGN KEY (rol_id) REFERENCES rol(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -80,9 +81,50 @@ CREATE TABLE producto(
     referencia VARCHAR(20) NOT NULL UNIQUE,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
-    precio DECIMAL(10,2) NOT NULL,
-    porcentaje_iva DECIMAL(5,2) NOT NULL,
-    stock INT NOT NULL DEFAULT 0,
+    precio DECIMAL(10,2) NOT NULL CHECK (precio >= 0),
+    porcentaje_iva DECIMAL(5,2) NOT NULL CHECK (porcentaje_iva >= 0),
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    activo BOOLEAN DEFAULT TRUE,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE factura(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero_factura VARCHAR(20) NOT NULL UNIQUE,  
+    cliente_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    base_imponible DECIMAL(10,2) NOT NULL CHECK (base_imponible >= 0),
+    total_iva DECIMAL(10,2) NOT NULL CHECK (total_iva >= 0),
+    total_factura DECIMAL(10,2) NOT NULL CHECK (total_factura >= 0),
+    estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_factura_cliente FOREIGN KEY (cliente_id) REFERENCES cliente(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_factura_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE factura_detalle(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    factura_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    concepto TEXT,
+    cantidad INT NOT NULL DEFAULT 1 CHECK (cantidad > 0),
+    precio_unitario DECIMAL(10,2) NOT NULL CHECK (precio_unitario >= 0),
+    porcentaje_iva DECIMAL(5,2) NOT NULL CHECK (porcentaje_iva >= 0),
+    subtotal DECIMAL(10,2) NOT NULL CHECK (subtotal >= 0),
+    total DECIMAL(10,2) NOT NULL CHECK (total >= 0),
+    CONSTRAINT fk_factura_detalle_factura FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_factura_detalle_producto FOREIGN KEY (producto_id) REFERENCES producto(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE pago(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    factura_id INT NOT NULL,
+    metodo_pago VARCHAR(50) NOT NULL,
+    monto DECIMAL(10,2) NOT NULL CHECK (monto > 0),
+    fecha_pago DATE,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pago_factura FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
